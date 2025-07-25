@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #a9c6ec;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4c53af;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0c1b61;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        p {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        #downloadLink {
+            margin-top: 10px;
+        }
+
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-to-speech-page">
+        <h1>Text to Speech</h1>
+        
+        <div id="configError" class="error" style="display: none;">
+            <strong>Configuration Error:</strong> Please create a config.js file with your MINIMAX_GROUP_ID and MINIMAX_API_KEY. 
+            See config.example.js for reference.
+        </div>
+
+        <form id="ttsForm">
+            <label for="model">Model:</label>
+            <select id="model" name="model">
+                <option value="speech-02-hd">speech-02-hd</option>
+                <option value="speech-02-turbo">speech-02-turbo</option>
+                <option value="speech-01-hd">speech-01-hd</option>
+                <option value="speech-01-turbo">speech-01-turbo</option>
+            </select>
+
+            <label for="voice_id">Voice ID:</label>
+            <select id="voice_id" name="voice_id">
+                <option value="HK_Cantonese_female1">HK_Cantonese_female1</option>
+                <option value="Cantonese_people_male_02">Cantonese_people_male_02</option>
+                <option value="Chinese (Mandarin)_Reliable_Executive">Chinese (Mandarin)_Reliable_Executive</option>
+                <option value="Chinese (Mandarin)_News_Anchor">Chinese (Mandarin)_News_Anchor</option>
+                <option value="English_Trustworthy_Man">English_Trustworthy_Man</option>
+                <option value="English_Graceful_Lady">English_Graceful_Lady</option>
+            </select>
+
+            <label for="speed">Speed:</label>
+            <input type="number" id="speed" name="speed" value="1" step="0.1">
+
+            <label for="text">Text:</label>
+            <textarea id="text" name="text" rows="4" cols="50">Hello, please type your text here.</textarea>
+
+            <label for="emotion">Emotion:</label>
+            <select id="emotion" name="emotion">
+                <option value="">Default emotion (none)</option>
+                <option value="happy">Happy</option>
+                <option value="sad">Sad</option>
+                <option value="angry">Angry</option>
+                <option value="fearful">Fearful</option>
+                <option value="disgusted">Disgusted</option>
+                <option value="surprised">Surprised</option>
+                <option value="neutral">Neutral</option>
+            </select>
+
+            <label for="language_boost">Language Boost:</label>
+            <select id="language_boost" name="language_boost">
+                <option value="auto">Auto</option>
+                <option value="Chinese,Yue">Cantonese</option>
+                <option value="English">English</option>
+                <option value="Chinese">Chinese</option>
+            </select>
+
+            <button type="button" onclick="submitForm()" id="submitBtn">Submit</button>
+        </form>
+
+        <p id="statusCode"></p>
+        <p id="traceId"></p>
+        <p id="responseContent"></p>
+        <div id="downloadLink"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Check if config is loaded
+        window.addEventListener('load', function() {
+            if (typeof window.CONFIG === 'undefined' || !window.CONFIG.MINIMAX_GROUP_ID || !window.CONFIG.MINIMAX_API_KEY) {
+                document.getElementById('configError').style.display = 'block';
+                document.getElementById('submitBtn').disabled = true;
+                return;
+            }
+        });
+
+        function submitForm() {
+            // Check config again before submitting
+            if (typeof window.CONFIG === 'undefined' || !window.CONFIG.MINIMAX_GROUP_ID || !window.CONFIG.MINIMAX_API_KEY) {
+                alert('Configuration not loaded. Please check your config.js file.');
+                return;
+            }
+
+            const group_id = window.CONFIG.MINIMAX_GROUP_ID;
+            const api_key = window.CONFIG.MINIMAX_API_KEY;
+            const voice_id = document.getElementById('voice_id').value || "cute_girl_test";
+            const model = document.getElementById('model').value;
+            const speed = document.getElementById('speed').value;
+            const text = document.getElementById('text').value;
+            const emotion = document.getElementById('emotion').value;
+            const language_boost = document.getElementById('language_boost').value;
+
+            const url = `https://api.minimaxi.chat/v1/t2a_v2?GroupId=${group_id}`;
+            const payload = {
+                "model": model,
+                "text": text,
+                "stream": false,
+                "voice_setting": {
+                    "voice_id": voice_id,
+                    "speed": parseFloat(speed),
+                    "vol": 1,
+                    "pitch": 0
+                },
+                "audio_setting": {
+                    "sample_rate": 32000,
+                    "format": "mp3",
+                    "channel": 1
+                }
+            };
+
+            if (emotion) {
+                payload.voice_setting.emotion = emotion;
+            }
+
+            if (language_boost) {
+                payload.language_boost = language_boost;
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${api_key}`,
+                'Content-Type': 'application/json'
+            };
+
+            fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                document.getElementById('statusCode').innerText = `Status code: ${response.status}`;
+                document.getElementById('traceId').innerText = `Trace-Id: ${response.headers.get('Trace-Id')}`;
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.data) {
+                    const audioValue = data.data.audio;
+                    const audioBlob = new Blob([new Uint8Array(audioValue.match(/[\da-f]{2}/gi).map(function (h) {
+                        return parseInt(h, 16);
+                    }))], { type: 'audio/mp3' });
+
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = audioUrl;
+                    downloadLink.download = `synthesized_audio_${emotion || "none"}_${language_boost || "auto"}_${voice_id}_${new Date().toISOString()}.mp3`;
+                    downloadLink.innerText = "Click here to download the audio file";
+                    document.getElementById('downloadLink').innerHTML = "";
+                    document.getElementById('downloadLink').appendChild(downloadLink);
+
+                } else {
+                    document.getElementById('responseContent').innerText = `Response: ${JSON.stringify(data)}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('responseContent').innerText = `Error: ${error.message}`;
+            });
+        }
+    </script>
+</body>
+</html>
