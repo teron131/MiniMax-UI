@@ -38,12 +38,12 @@ app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 class TTSRequest(BaseModel):
     model: str = Field(default="speech-02-hd", description="TTS model to use")
     text: str = Field(..., description="Text to synthesize")
-    voice_id: str = Field(default="English_Graceful_Lady", description="Voice ID")
-    speed: float = Field(default=1.0, ge=0.1, le=3.0, description="Speech speed")
+    voice_id: str = Field(default="Wise_Woman", description="Voice ID")
+    speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Speech speed")
     emotion: Optional[str] = Field(default=None, description="Emotion setting")
-    language_boost: Optional[str] = Field(default="auto", description="Language boost setting")
-    volume: float = Field(default=1.0, ge=0.0, le=2.0, description="Volume level")
-    pitch: float = Field(default=0.0, ge=-20.0, le=20.0, description="Pitch adjustment")
+    language_boost: Optional[str] = Field(default="Chinese,Yue", description="Language boost setting")
+    volume: float = Field(default=1.0, gt=0.0, le=10.0, description="Volume level")
+    pitch: float = Field(default=0.0, ge=-12.0, le=12.0, description="Pitch adjustment")
 
 
 class TTSResponse(BaseModel):
@@ -136,12 +136,23 @@ async def text_to_speech(request: TTSRequest):
 async def get_available_voices():
     """Get list of available voice IDs."""
     voices = [
-        {"id": "HK_Cantonese_female1", "name": "Hong Kong Cantonese Female 1", "language": "Cantonese"},
-        {"id": "Cantonese_people_male_02", "name": "Cantonese Male 02", "language": "Cantonese"},
-        {"id": "Chinese (Mandarin)_Reliable_Executive", "name": "Reliable Executive", "language": "Mandarin"},
-        {"id": "Chinese (Mandarin)_News_Anchor", "name": "News Anchor", "language": "Mandarin"},
-        {"id": "English_Trustworthy_Man", "name": "Trustworthy Man", "language": "English"},
-        {"id": "English_Graceful_Lady", "name": "Graceful Lady", "language": "English"},
+        {"id": "Wise_Woman", "name": "Wise Woman", "language": "English"},
+        {"id": "Friendly_Person", "name": "Friendly Person", "language": "English"},
+        {"id": "Inspirational_girl", "name": "Inspirational Girl", "language": "English"},
+        {"id": "Deep_Voice_Man", "name": "Deep Voice Man", "language": "English"},
+        {"id": "Calm_Woman", "name": "Calm Woman", "language": "English"},
+        {"id": "Casual_Guy", "name": "Casual Guy", "language": "English"},
+        {"id": "Lively_Girl", "name": "Lively Girl", "language": "English"},
+        {"id": "Patient_Man", "name": "Patient Man", "language": "English"},
+        {"id": "Young_Knight", "name": "Young Knight", "language": "English"},
+        {"id": "Determined_Man", "name": "Determined Man", "language": "English"},
+        {"id": "Lovely_Girl", "name": "Lovely Girl", "language": "English"},
+        {"id": "Decent_Boy", "name": "Decent Boy", "language": "English"},
+        {"id": "Imposing_Manner", "name": "Imposing Manner", "language": "English"},
+        {"id": "Elegant_Man", "name": "Elegant Man", "language": "English"},
+        {"id": "Abbess", "name": "Abbess", "language": "English"},
+        {"id": "Sweet_Girl_2", "name": "Sweet Girl 2", "language": "English"},
+        {"id": "Exuberant_Girl", "name": "Exuberant Girl", "language": "English"},
     ]
     return success_response("Available voices retrieved", {"voices": voices})
 

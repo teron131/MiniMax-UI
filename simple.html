@@ -94,16 +94,33 @@
 
             <label for="voice_id">Voice ID:</label>
             <select id="voice_id" name="voice_id">
-                <option value="HK_Cantonese_female1">HK_Cantonese_female1</option>
-                <option value="Cantonese_people_male_02">Cantonese_people_male_02</option>
-                <option value="Chinese (Mandarin)_Reliable_Executive">Chinese (Mandarin)_Reliable_Executive</option>
-                <option value="Chinese (Mandarin)_News_Anchor">Chinese (Mandarin)_News_Anchor</option>
-                <option value="English_Trustworthy_Man">English_Trustworthy_Man</option>
-                <option value="English_Graceful_Lady">English_Graceful_Lady</option>
+                <option value="Wise_Woman">Wise Woman</option>
+                <option value="Friendly_Person">Friendly Person</option>
+                <option value="Inspirational_girl">Inspirational Girl</option>
+                <option value="Deep_Voice_Man">Deep Voice Man</option>
+                <option value="Calm_Woman">Calm Woman</option>
+                <option value="Casual_Guy">Casual Guy</option>
+                <option value="Lively_Girl">Lively Girl</option>
+                <option value="Patient_Man">Patient Man</option>
+                <option value="Young_Knight">Young Knight</option>
+                <option value="Determined_Man">Determined Man</option>
+                <option value="Lovely_Girl">Lovely Girl</option>
+                <option value="Decent_Boy">Decent Boy</option>
+                <option value="Imposing_Manner">Imposing Manner</option>
+                <option value="Elegant_Man">Elegant Man</option>
+                <option value="Abbess">Abbess</option>
+                <option value="Sweet_Girl_2">Sweet Girl 2</option>
+                <option value="Exuberant_Girl">Exuberant Girl</option>
             </select>
 
-            <label for="speed">Speed:</label>
-            <input type="number" id="speed" name="speed" value="1" step="0.1">
+            <label for="speed">Speed (0.5-2.0):</label>
+            <input type="number" id="speed" name="speed" value="1.0" step="0.1" min="0.5" max="2.0">
+
+            <label for="volume">Volume (0.1-10.0):</label>
+            <input type="number" id="volume" name="volume" value="1.0" step="0.1" min="0.1" max="10.0">
+
+            <label for="pitch">Pitch (-12 to 12):</label>
+            <input type="number" id="pitch" name="pitch" value="0" step="1" min="-12" max="12">
 
             <label for="text">Text:</label>
             <textarea id="text" name="text" rows="4" cols="50">Hello, please type your text here.</textarea>
@@ -111,21 +128,42 @@
             <label for="emotion">Emotion:</label>
             <select id="emotion" name="emotion">
                 <option value="">Default emotion (none)</option>
-                <option value="happy">Happy</option>
-                <option value="sad">Sad</option>
-                <option value="angry">Angry</option>
-                <option value="fearful">Fearful</option>
-                <option value="disgusted">Disgusted</option>
-                <option value="surprised">Surprised</option>
-                <option value="neutral">Neutral</option>
+                <option value="happy">😊 Happy</option>
+                <option value="sad">😢 Sad</option>
+                <option value="angry">😠 Angry</option>
+                <option value="fearful">😨 Fearful</option>
+                <option value="disgusted">🤢 Disgusted</option>
+                <option value="surprised">😲 Surprised</option>
+                <option value="neutral">😐 Neutral</option>
             </select>
 
             <label for="language_boost">Language Boost:</label>
             <select id="language_boost" name="language_boost">
-                <option value="auto">Auto</option>
-                <option value="Chinese,Yue">Cantonese</option>
-                <option value="English">English</option>
-                <option value="Chinese">Chinese</option>
+                <option value="Chinese,Yue">🇭🇰 Cantonese</option>
+                <option value="Chinese">🇨🇳 Mandarin</option>
+                <option value="English">🇺🇸 English</option>
+                <option value="auto">🌐 Auto</option>
+                <option value="Arabic">🇸🇦 Arabic</option>
+                <option value="Russian">🇷🇺 Russian</option>
+                <option value="Spanish">🇪🇸 Spanish</option>
+                <option value="French">🇫🇷 French</option>
+                <option value="Portuguese">🇵🇹 Portuguese</option>
+                <option value="German">🇩🇪 German</option>
+                <option value="Turkish">🇹🇷 Turkish</option>
+                <option value="Dutch">🇳🇱 Dutch</option>
+                <option value="Ukrainian">🇺🇦 Ukrainian</option>
+                <option value="Vietnamese">🇻🇳 Vietnamese</option>
+                <option value="Indonesian">🇮🇩 Indonesian</option>
+                <option value="Japanese">🇯🇵 Japanese</option>
+                <option value="Italian">🇮🇹 Italian</option>
+                <option value="Korean">🇰🇷 Korean</option>
+                <option value="Thai">🇹🇭 Thai</option>
+                <option value="Polish">🇵🇱 Polish</option>
+                <option value="Romanian">🇷🇴 Romanian</option>
+                <option value="Greek">🇬🇷 Greek</option>
+                <option value="Czech">🇨🇿 Czech</option>
+                <option value="Finnish">🇫🇮 Finnish</option>
+                <option value="Hindi">🇮🇳 Hindi</option>
             </select>
 
             <button type="button" onclick="submitForm()" id="submitBtn">Submit</button>
@@ -142,6 +180,8 @@
             const voice_id = document.getElementById('voice_id').value;
             const model = document.getElementById('model').value;
             const speed = document.getElementById('speed').value;
+            const volume = document.getElementById('volume').value;
+            const pitch = document.getElementById('pitch').value;
             const text = document.getElementById('text').value;
             const emotion = document.getElementById('emotion').value;
             const language_boost = document.getElementById('language_boost').value;
@@ -153,8 +193,10 @@
                 "text": text,
                 "voice_id": voice_id,
                 "speed": parseFloat(speed),
+                "volume": parseFloat(volume),
+                "pitch": parseFloat(pitch),
                 "emotion": emotion || null,
-                "language_boost": language_boost || "auto"
+                "language_boost": language_boost || "Chinese,Yue"
             };
 
             const headers = {
@@ -191,7 +233,7 @@
 
                     const downloadLink = document.createElement('a');
                     downloadLink.href = audioUrl;
-                    downloadLink.download = `synthesized_audio_${emotion || "none"}_${language_boost || "auto"}_${voice_id}_${new Date().toISOString()}.mp3`;
+                    downloadLink.download = `tts_${voice_id}_${emotion || "neutral"}_${language_boost.replace(',', '_') || "auto"}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.mp3`;
                     downloadLink.innerText = "Click here to download the audio file";
                     document.getElementById('downloadLink').innerHTML = "";
                     document.getElementById('downloadLink').appendChild(downloadLink);
