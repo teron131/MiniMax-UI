@@ -6,6 +6,7 @@ from typing import Optional
 import httpx
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -67,8 +68,8 @@ def error_response(message: str, status_code: int = 400) -> dict:
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information."""
-    return {"app": config.APP_NAME, "version": "0.1.0", "docs": "/docs", "status": "running"}
+    """Serve the main HTML interface."""
+    return FileResponse(config.PROJECT_ROOT / "simple.html")
 
 
 @app.get("/health")
@@ -92,7 +93,7 @@ async def text_to_speech(request: TTSRequest):
             "model": request.model,
             "text": request.text,
             "stream": False,
-            "voice_setting": {"voice_id": request.voice_id, "speed": request.speed, "vol": request.volume, "pitch": request.pitch},
+            "voice_setting": {"voice_id": request.voice_id, "speed": request.speed, "vol": int(request.volume), "pitch": int(request.pitch)},
             "audio_setting": {"sample_rate": config.DEFAULT_SAMPLE_RATE, "format": config.DEFAULT_FORMAT, "channel": config.DEFAULT_CHANNEL},
         }
 

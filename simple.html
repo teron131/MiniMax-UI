@@ -81,11 +81,7 @@
 <body>
     <div class="container text-to-speech-page">
         <h1>Text to Speech</h1>
-        
-        <div id="configError" class="error" style="display: none;">
-            <strong>Configuration Error:</strong> Please create a config.js file with your MINIMAX_GROUP_ID and MINIMAX_API_KEY. 
-            See config.example.js for reference.
-        </div>
+
 
         <form id="ttsForm">
             <label for="model">Model:</label>
@@ -141,63 +137,32 @@
         <div id="downloadLink"></div>
     </div>
 
-    <script src="config.js"></script>
     <script>
-        // Check if config is loaded
-        window.addEventListener('load', function() {
-            if (typeof window.CONFIG === 'undefined' || !window.CONFIG.MINIMAX_GROUP_ID || !window.CONFIG.MINIMAX_API_KEY) {
-                document.getElementById('configError').style.display = 'block';
-                document.getElementById('submitBtn').disabled = true;
-                return;
-            }
-        });
-
         function submitForm() {
-            // Check config again before submitting
-            if (typeof window.CONFIG === 'undefined' || !window.CONFIG.MINIMAX_GROUP_ID || !window.CONFIG.MINIMAX_API_KEY) {
-                alert('Configuration not loaded. Please check your config.js file.');
-                return;
-            }
-
-            const group_id = window.CONFIG.MINIMAX_GROUP_ID;
-            const api_key = window.CONFIG.MINIMAX_API_KEY;
-            const voice_id = document.getElementById('voice_id').value || "cute_girl_test";
+            const voice_id = document.getElementById('voice_id').value;
             const model = document.getElementById('model').value;
             const speed = document.getElementById('speed').value;
             const text = document.getElementById('text').value;
             const emotion = document.getElementById('emotion').value;
             const language_boost = document.getElementById('language_boost').value;
 
-            const url = `https://api.minimaxi.chat/v1/t2a_v2?GroupId=${group_id}`;
+            // Use the FastAPI backend endpoint
+            const url = '/api/tts';
             const payload = {
                 "model": model,
                 "text": text,
-                "stream": false,
-                "voice_setting": {
-                    "voice_id": voice_id,
-                    "speed": parseFloat(speed),
-                    "vol": 1,
-                    "pitch": 0
-                },
-                "audio_setting": {
-                    "sample_rate": 32000,
-                    "format": "mp3",
-                    "channel": 1
-                }
+                "voice_id": voice_id,
+                "speed": parseFloat(speed),
+                "emotion": emotion || null,
+                "language_boost": language_boost || "auto"
             };
-
-            if (emotion) {
-                payload.voice_setting.emotion = emotion;
-            }
-
-            if (language_boost) {
-                payload.language_boost = language_boost;
-            }
 
             const headers = {
-                'Authorization': `Bearer ${api_key}`,
                 'Content-Type': 'application/json'
             };
+
+            document.getElementById('statusCode').innerText = 'Processing...';
+            document.getElementById('submitBtn').disabled = true;
 
             fetch(url, {
                 method: 'POST',
@@ -206,13 +171,17 @@
             })
             .then(response => {
                 document.getElementById('statusCode').innerText = `Status code: ${response.status}`;
-                document.getElementById('traceId').innerText = `Trace-Id: ${response.headers.get('Trace-Id')}`;
                 return response.json();
             })
             .then(data => {
-                if (data && data.data) {
-                    const audioValue = data.data.audio;
-                    const audioBlob = new Blob([new Uint8Array(audioValue.match(/[\da-f]{2}/gi).map(function (h) {
+                document.getElementById('submitBtn').disabled = false;
+                
+                if (data.status === 'success' && data.audio_data) {
+                    document.getElementById('traceId').innerText = `Trace-Id: ${data.trace_id || 'N/A'}`;
+                    
+                    // Convert base64 audio data to blob
+                    const audioData = data.audio_data;
+                    const audioBlob = new Blob([new Uint8Array(audioData.match(/[\da-f]{2}/gi).map(function (h) {
                         return parseInt(h, 16);
                     }))], { type: 'audio/mp3' });
 
@@ -227,11 +196,13 @@
                     document.getElementById('downloadLink').innerHTML = "";
                     document.getElementById('downloadLink').appendChild(downloadLink);
 
+                    document.getElementById('responseContent').innerText = `Success: ${data.message}`;
                 } else {
-                    document.getElementById('responseContent').innerText = `Response: ${JSON.stringify(data)}`;
+                    document.getElementById('responseContent').innerText = `Error: ${data.message || JSON.stringify(data)}`;
                 }
             })
             .catch(error => {
+                document.getElementById('submitBtn').disabled = false;
                 console.error('Error:', error);
                 document.getElementById('responseContent').innerText = `Error: ${error.message}`;
             });
