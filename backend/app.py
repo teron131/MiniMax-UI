@@ -6,7 +6,6 @@ from typing import Optional
 import httpx
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -68,8 +67,8 @@ def error_response(message: str, status_code: int = 400) -> dict:
 
 @app.get("/")
 async def root():
-    """Serve the main HTML interface."""
-    return FileResponse(config.PROJECT_ROOT / "simple.html")
+    """API info endpoint."""
+    return {"app": config.APP_NAME, "description": "Text-to-Speech API using MiniMax", "version": "0.1.0", "frontend_url": "http://localhost:3000", "api_docs": "/docs"}
 
 
 @app.get("/health")
